@@ -11,21 +11,24 @@ const DEFAULT_LOGO_URL = 'https://img5.pic.in.th/file/secure-sv1/273218374_30604
 const DEFAULT_FOOTER_TEXT = 'ระบบรายงานผลการพัฒนาตนเองและวิชาชีพ โรงเรียนบ้านนานวล';
 
 // === INITIAL SETUP ===
-function onOpen() {
-  SpreadsheetApp.getUi()
-    .createMenu('Setup')
-    .addItem('Initialize Sheets & Folders', 'initializeApp')
-    .addToUi();
+function onOpen(e) {
+  if (e && e.source) {
+    SpreadsheetApp.getUi()
+      .createMenu('Setup')
+      .addItem('Initialize Sheets & Folders', 'initializeApp')
+      .addToUi();
+  }
 }
 
-function initializeApp() {
-  const ui = SpreadsheetApp.getUi(); // พยายามเข้าถึง UI
+function initializeApp(e) {
+  let ui;
+  if (e && e.source) {
+    ui = SpreadsheetApp.getUi(); // ได้เฉพาะถ้ามี Spreadsheet context
+  }
 
   ensureSheetExists(REPORTS_SHEET_NAME, ['Timestamp', 'ชื่อผู้เข้าร่วม', 'ตำแหน่ง', 'ชื่อกิจกรรม', 'วันที่เข้าร่วม', 'หน่วยงานที่จัด', 'ความรู้ที่ได้รับ', 'ผลการเข้าร่วมและการนำไปใช้', 'ลิงก์ภาพ1', 'ลิงก์ภาพ2', 'ลิงก์ลายเซ็น', 'ลิงก์PDF', 'ID']);
   ensureSheetExists(PERSONNEL_SHEET_NAME, ['ชื่อ-สกุล', 'ตำแหน่ง']);
-  // ensureSheetExists(SETTINGS_SHEET_NAME, ['Key', 'Value']); // ถ้าใช้ Sheet เก็บ Config
 
-  // Initialize PropertiesService for settings
   const properties = PropertiesService.getUserProperties();
   if (!properties.getProperty('websiteTitle')) {
     properties.setProperty('websiteTitle', DEFAULT_WEBSITE_TITLE);
@@ -40,19 +43,18 @@ function initializeApp() {
     properties.setProperty('footerText', DEFAULT_FOOTER_TEXT);
   }
 
-  // Check output folder
   try {
     DriveApp.getFolderById(OUTPUT_FOLDER_ID);
-    if (ui) { // ตรวจสอบว่า UI พร้อมใช้งาน
+    if (ui) {
       ui.alert('Initialization', 'Folders and Sheets are ready.', ui.ButtonSet.OK);
     } else {
       Logger.log('Initialization: Folders and Sheets are ready.');
     }
   } catch (e) {
-    if (ui) { // ตรวจสอบว่า UI พร้อมใช้งาน
-      ui.alert('Error', 'Output Folder ID (' + OUTPUT_FOLDER_ID + ') not found or access denied. Please check and try again.', ui.ButtonSet.OK);
+    if (ui) {
+      ui.alert('Error', 'Output Folder ID (' + OUTPUT_FOLDER_ID + ') not found or access denied.', ui.ButtonSet.OK);
     } else {
-      Logger.log('Error: Output Folder ID (' + OUTPUT_FOLDER_ID + ') not found or access denied. Please check and try again. Error: ' + e.message);
+      Logger.log('Error: Output Folder ID (' + OUTPUT_FOLDER_ID + ') not found or access denied. ' + e.message);
     }
   }
 }
